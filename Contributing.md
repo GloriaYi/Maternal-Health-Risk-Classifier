@@ -1,1 +1,2 @@
-# 522-project
+# Contributing to the project
+
