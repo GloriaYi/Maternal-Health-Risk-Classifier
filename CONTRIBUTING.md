@@ -53,7 +53,7 @@ git commit -m "Some descriptive message about your change"
 git push origin <your-branch-name>
 ```
 
-You will then need to submit a pull request (PR) on GitHub asking to merge your branch into the main project repository. Please provide a clear description of the changes you have made and their purpose. Tag a reviewer to ensure that your PR in reviewed in a prompt manner. Reviewers may provide feedback or request changes. Once the PR is approved, you will be able to merge it into the main branch of the project's repository. 
+You will then need to submit a pull request (PR) on GitHub asking to merge your branch into the main project repository. Please provide a clear description of the changes you have made and their purpose. Tag a reviewer to ensure that your PR is reviewed in a prompt manner. Reviewers may provide feedback or request changes. Once the PR is approved, you will be able to merge it into the main branch of the project's repository. 
 
 ## Code of Conduct
 
@@ -61,4 +61,4 @@ Please note that this project is released with a [Code of Conduct](CODE_OF_CONDU
 
 ## Attribution
 
-These contributing guideliens are adapted from the [altair feedback and contribution guidelines](https://github.com/vega/altair/blob/main/CONTRIBUTING.md).
+These contributing guidelines are adapted from the [altair feedback and contribution guidelines](https://github.com/vega/altair/blob/main/CONTRIBUTING.md).

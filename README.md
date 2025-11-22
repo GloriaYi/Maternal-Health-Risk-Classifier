@@ -29,7 +29,7 @@ To run the data analysis, run the following from the root of this repository:
 jupyter lab
 ```
 
-Open `notebooks/health_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernal choose "Python [conda env:maternal-health-risk-classifier]".
+Open `notebooks/health_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:maternal-health-risk-classifier]".
 
 Next, under the "Kernel" menu click "Restart Kernel and Run All Cells..."
 
