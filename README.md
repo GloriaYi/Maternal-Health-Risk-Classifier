@@ -25,21 +25,23 @@ https://github.com/GloriaYi/Maternal-Health-Risk-Classifier/blob/b950e2f3587a742
 
 1. Clone this GitHub repository.
 
-First time running the project, run the following from the root of this repository:
+1. Navigate to the root of this project on your computer using the
+   command line and enter the following command:
 
-``` bash
-conda-lock install --name maternal-health-risk-classifier conda-lock.yml
+``` 
+make up
 ```
 
-To run the data analysis, run the following from the root of this repository:
+2. Browse to this url: http://localhost:8886/
 
-``` bash
-jupyter lab
-```
+3. To run the data analysis, run the following from the root of this repository:
+Open `notebooks/health_analysis.ipynb` in Jupyter Lab you just launhed and under the "Kernel" menu click "Restart Kernel and Run All Cells..."
 
-Open `notebooks/health_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:maternal-health-risk-classifier]".
+### Clean up
 
-Next, under the "Kernel" menu click "Restart Kernel and Run All Cells..."
+1. To shut down the container and clean up the resources, 
+type `Cntrl` + `C` in the terminal
+where you launched the container, and then type `docker compose rm`
 
 ## Dependencies
 
