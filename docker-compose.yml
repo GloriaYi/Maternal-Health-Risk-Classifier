@@ -1,6 +1,6 @@
 services:
   dockerlock:
-    image: gloriayi/maternal-health-risk-classifier:latest
+    image: gloriayi/maternal-health-risk-classifier:f829927
     container_name: dockerlock
     ports:
       - "8886:8888"
