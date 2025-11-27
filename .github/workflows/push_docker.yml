@@ -30,7 +30,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: randallxlee/Maternal-Health-Risk-Classifier
+          images: GloriaYi/Maternal-Health-Risk-Classifier
           tags: |
             type=raw, value={{sha}},enable=${{github.ref_type != 'tag' }}
             type=raw, value=latest
