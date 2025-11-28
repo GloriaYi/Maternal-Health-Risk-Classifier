@@ -14,23 +14,32 @@ Fork the `Maternal-Health-Risk-Classifier` repository on GitHub and then clone t
 git clone https://github.com/YOUR-USERNAME/Maternal-Health-Risk-Classifier.git
 ```
 
-Create the Conda environment from the [`environment.yml`](environment.yml) file:
+Navigate to the root of the project directory:
 
 ``` bash
-conda env create -f environment.yml
-conda activate maternal-health-risk-classifier
+cd Maternal-Health-Risk-Classifier
 ```
 
-Alternatively, you can use the [`conda-lock.yml`](conda-lock.yml) file for exact reproducibility across different platforms:
+#### Docker Setup
+
+If you are using Windows or Mac, make sure Docker Desktop is running.
+
+Start the Docker container by running:
 
 ``` bash
-conda-lock install --name maternal-health-risk-classifier conda-lock.yml
+make up
 ```
 
-After activation, verify that all packages are installed correctly:
+This will build and launch the Jupyter Lab environment. Browse to http://localhost:8886/ to access Jupyter Lab.
+
+To run the data analysis, open `notebooks/health_analysis.ipynb` in Jupyter Lab and under the "Kernel" menu click "Restart Kernel and Run All Cells..."
+
+#### Clean Up
+
+To shut down the container and clean up the resources, type `Ctrl` + `C` in the terminal where you launched the container, and then run:
 
 ``` bash
-conda list
+make stop
 ```
 
 ### Creating a Branch
