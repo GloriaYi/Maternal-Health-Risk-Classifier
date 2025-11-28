@@ -14,8 +14,9 @@ Our model showed particularly strong performance in identifying high-risk pregna
 
 The data set used in this project consists of health conditions of pregnant individuals from rural areas of Bangladesh, created by Marzia Ahmed at Daffodil International University. It was sourced from the UC Irvine Machine Learning Repossitory and can be found [here](https://archive.ics.uci.edu/dataset/863/maternal+health+risk). Each observation in the data set corresponds to a pregnant individual's health profile, comprising a risk intensity level (low, medium or high risk) and associated clinical measurements including demographic information (age) and vital signs (systolic blood pressure, diastolic blood pressure, blood glucose concentration, body temperature and resting heart rate). The data set was collected via IoT-based risk monitoring system from hospitals, community clinics and maternal health cares in rural Bangladesh. 
  
-## Rendered Notebook
-https://github.com/GloriaYi/Maternal-Health-Risk-Classifier/blob/b950e2f3587a7426919951b268e1d8431d6e8d91/notebooks/health_analysis.pdf
+## Report
+
+The report can be found [here](https://github.com/GloriaYi/Maternal-Health-Risk-Classifier/blob/b950e2f3587a7426919951b268e1d8431d6e8d91/notebooks/health_analysis.pdf)
 
 ## Usage
 
