@@ -14,26 +14,39 @@ Our model showed particularly strong performance in identifying high-risk pregna
 
 The data set used in this project consists of health conditions of pregnant individuals from rural areas of Bangladesh, created by Marzia Ahmed at Daffodil International University. It was sourced from the UC Irvine Machine Learning Repossitory and can be found [here](https://archive.ics.uci.edu/dataset/863/maternal+health+risk). Each observation in the data set corresponds to a pregnant individual's health profile, comprising a risk intensity level (low, medium or high risk) and associated clinical measurements including demographic information (age) and vital signs (systolic blood pressure, diastolic blood pressure, blood glucose concentration, body temperature and resting heart rate). The data set was collected via IoT-based risk monitoring system from hospitals, community clinics and maternal health cares in rural Bangladesh. 
  
-## Rendered Notebook
-https://github.com/GloriaYi/Maternal-Health-Risk-Classifier/blob/b950e2f3587a7426919951b268e1d8431d6e8d91/notebooks/health_analysis.pdf
+## Report
+
+The report can be found [here](https://github.com/GloriaYi/Maternal-Health-Risk-Classifier/blob/b950e2f3587a7426919951b268e1d8431d6e8d91/notebooks/health_analysis.pdf)
 
 ## Usage
 
-First time running the project, run the following from the root of this repository:
+### Setup
 
-``` bash
-conda-lock install --name maternal-health-risk-classifier conda-lock.yml
+> If you are using Windows or Mac, make sure Docker Desktop is running.
+
+1. Clone this GitHub repository.
+
+1. Navigate to the root of this project on your computer using the
+   command line and enter the following command:
+
+``` 
+make up
 ```
 
-To run the data analysis, run the following from the root of this repository:
+2. Browse to this url: http://localhost:8886/
 
-``` bash
-jupyter lab
+3. To run the data analysis, run the following from the root of this repository:
+Open `notebooks/health_analysis.ipynb` in Jupyter Lab you just launhed and under the "Kernel" menu click "Restart Kernel and Run All Cells..."
+
+### Clean up
+
+1. To shut down the container and clean up the resources, 
+type `Cntrl` + `C` in the terminal
+where you launched the container, and enter the following command:
+
+``` 
+make stop
 ```
-
-Open `notebooks/health_analysis.ipynb` in Jupyter Lab and under Switch/Select Kernel choose "Python [conda env:maternal-health-risk-classifier]".
-
-Next, under the "Kernel" menu click "Restart Kernel and Run All Cells..."
 
 ## Dependencies
 
