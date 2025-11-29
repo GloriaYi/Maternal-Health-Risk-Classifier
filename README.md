@@ -48,13 +48,31 @@ where you launched the container, and enter the following command:
 make stop
 ```
 
-## Dependencies
+## Developer notes
+
+### Developer dependencies
 
 - `conda`
 - `conda-lock`
 - `jupyterlab` (version 4.5.0 or higher)
 - `nb_conda_kernels`
 - Python and packages listed in [`environment.yml`](environment.yml)
+
+### Adding a new dependency
+
+1. Add the dependency to the `environment.yml` file on a new branch.
+
+2. Run `python utils/update_enviroment_yml.py --root_dir="." --env_name="health_analysis_env" --yml_name="environment.yml"` to append the version numbers of the packages.
+   
+3. Run `conda-lock -f environment.yml -p osx-arm64 -p osx-64 -p linux-aarch64 -p linux-64 -p win-64` to update the `conda-lock.yml` file.
+
+4. Re-build the Docker image locally to ensure it builds and runs properly.
+
+5. Push the changes to GitHub. A new Docker image will be built and pushed to Docker Hub automatically. It will be tagged with the SHA for the commit that changed the file.
+
+6. Update the `docker-compose.yml` file on your branch to use the new container image (make sure to update the tag specifically).
+
+5. Send a pull request to merge the changes into the `main` branch. 
 
 ## License
 
