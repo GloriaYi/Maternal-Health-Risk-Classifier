@@ -10,3 +10,5 @@ dependencies:
 - seaborn=0.13.2
 - pandera=0.27.0
 - conda-lock=3.0.4
+- matplotlib=3.10.8
+- numpy[version='<2.0']
