@@ -12,3 +12,5 @@ dependencies:
 - conda-lock=3.0.4
 - matplotlib=3.10.8
 - numpy[version='<2.0']
+- click=8.3.1
+- quarto=1.8.26
