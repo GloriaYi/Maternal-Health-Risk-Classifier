@@ -85,7 +85,7 @@ def main(validated_data, data_to, preprocessor_to, test_size, random_state):
 
     # save the preprocessor
     preprocessor.fit(X_train)
-    preprocessor_path = os.path.join(preprocessor_to, "maternal_health_preprocessor.pickle")
+    preprocessor_path = os.path.join(preprocessor_to, "maternal_risk_preprocessor.pickle")
     pickle.dump(preprocessor, open(preprocessor_path, "wb"))
 
     # transform the data
