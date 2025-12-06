@@ -40,9 +40,7 @@ Open `notebooks/health_analysis.ipynb` in Jupyter Lab you just launhed and under
 
 ### Clean up
 
-1. To shut down the container and clean up the resources, 
-type `Cntrl` + `C` in the terminal
-where you launched the container, and enter the following command:
+1. To shut down the container and clean up the resources, enter the following command:
 
 ``` 
 make stop
@@ -56,11 +54,11 @@ make stop
 
 ### Adding a new dependency
 
-1. Add the dependency to the `environment.yml` file on a new branch.
+1. Add the dependency to the `environment.yml` file on a new branch. If you have installed the package into the environment, make sure you are in the environment `health_analysis_env` and run `conda env export --from-history | grep -v "^prefix" > environment.yml` to export the environment automatically.
 
 2. Run `python utils/update_enviroment_yml.py --root_dir="." --env_name="health_analysis_env" --yml_name="environment.yml"` to append the version numbers of the packages.
    
-3. Run `conda-lock -f environment.yml -p osx-arm64 -p osx-64 -p linux-aarch64 -p linux-64 -p win-64` to update the `conda-lock.yml` file.
+3. Run `conda-lock -f environment.yml -p osx-arm64 -p osx-64 -p linux-64 -p win-64` to update the `conda-lock.yml` file.
 
 4. Re-build the Docker image locally to ensure it builds and runs properly.
 
