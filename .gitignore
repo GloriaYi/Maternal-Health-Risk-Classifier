@@ -11,3 +11,4 @@ tests/__pycache__
 **.cache/
 **.conda/
 lock.txt
+**.quarto
