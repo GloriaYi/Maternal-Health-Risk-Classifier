@@ -1,0 +1,51 @@
+2025-12-07 19:21:17,135 - 
+{
+  "DATA": {
+    "DATAFRAME_CHECK": [
+      {
+        "schema": null,
+        "column": "Age",
+        "check": "in_range(10, 65)",
+        "error": "Column 'Age' failed element-wise validator number 0: in_range(10, 65) failure cases: 66, 70"
+      },
+      {
+        "schema": null,
+        "column": "HeartRate",
+        "check": "in_range(50, 150)",
+        "error": "Column 'HeartRate' failed element-wise validator number 0: in_range(50, 150) failure cases: 7, 7"
+      },
+      {
+        "schema": null,
+        "column": null,
+        "check": "Duplicate rows found.",
+        "error": "DataFrameSchema 'None' failed series or dataframe validator 0: <Check <lambda>: Duplicate rows found.>"
+      }
+    ]
+  }
+}
+2025-12-07 19:23:33,566 - No such comm target registered: quarto_kernel_setup
+2025-12-07 19:23:34,780 - 
+{
+  "DATA": {
+    "DATAFRAME_CHECK": [
+      {
+        "schema": null,
+        "column": "Age",
+        "check": "in_range(10, 65)",
+        "error": "Column 'Age' failed element-wise validator number 0: in_range(10, 65) failure cases: 66, 70"
+      },
+      {
+        "schema": null,
+        "column": "HeartRate",
+        "check": "in_range(50, 150)",
+        "error": "Column 'HeartRate' failed element-wise validator number 0: in_range(50, 150) failure cases: 7, 7"
+      },
+      {
+        "schema": null,
+        "column": null,
+        "check": "Duplicate rows found.",
+        "error": "DataFrameSchema 'None' failed series or dataframe validator 0: <Check <lambda>: Duplicate rows found.>"
+      }
+    ]
+  }
+}

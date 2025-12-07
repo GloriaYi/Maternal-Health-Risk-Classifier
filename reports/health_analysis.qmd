@@ -1,0 +1,668 @@
+---
+title: Predicting risk factors for maternal mortality
+authors: Apoorva Srivastava, Gloria (Guaner) Yi, Jeffrey Ding & Randall Lee
+jupyter: python3
+format:
+    pdf:
+        toc: true
+        toc-depth: 2
+    html:
+        toc: true
+        toc-depth: 2
+bibliography: references.bib
+output-file: health_analysis
+execute:
+    echo: false
+    warning: false
+editor: source
+---
+
+```{python}
+import numpy as np
+import pandas as pd
+import requests
+import zipfile
+import json
+import logging
+import pandera.pandas as pa
+import altair as alt
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pandera import Column, Check
+from deepchecks.tabular import Dataset
+from sklearn.model_selection import train_test_split
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import StandardScaler, label_binarize
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_validate
+from sklearn.pipeline import make_pipeline
+from scipy.stats import loguniform
+from sklearn.model_selection import RandomizedSearchCV, cross_val_predict
+from sklearn.metrics import fbeta_score, make_scorer, recall_score, ConfusionMatrixDisplay, confusion_matrix, RocCurveDisplay, roc_auc_score
+```
+
+# Abstract
+
+Despite advancements in medicine and technology, maternal mortality remains a prevalent issue impacting many women in developing countries. The general consensus is that maternal mortality is a multidimensional issue that is complicated by many socioeconomic determinants of health and barriers to access. This project aims to investigate the viability of using a Support Vector Classifier (SVC) trained on open-source maternal health measurements to predict the risk intensity levels (low, medium, or high) of pregnant women. Our final classifier performed fairly well on an unseen test data set, with a weighted recall score of 0.77 and an overall accuracy of 0.77. Out of the 305 test data cases, it correctly predicted 235 cases. The model showed particularly strong performance in identifying high-risk pregnancies, achieving an AUV of 0.943 for the high-risk class, compared to 0.820 for low-risk class and 0.814 for medium-risk class. However, the model made notable errors where 13 high-risk cases were misclassified as 11 medium-risk and 2 low-risk. These false negatives are gaps where high-risk individuals may not receive the necessary care. We recommend further research to improve the model's sensitivity to high-risk cases and better differentiate between medium and low-risk categories before it is ready to be put into production in clinical settings. Additional feature engineering or exploring ensemble methods may help reduce these critical misclassifications. The implementation of refined classifiers would expand the capabilities of most healthcare systems and increase the efficacy of monitoring and interventions in underprivileged communities.
+
+# Introduction
+
+Maternal mortality is a serious issue that predates human history and still affects many mothers today. Among women of reproductive age, 9% of global deaths are currently attributable to maternal causes such as hemorrhaging, hypertension, and unsafe abortion [@hassfurter2025trends]. Fortunately, gradual improvements in medical understanding, policy, healthcare, and overall quality of life have led to steadily decreasing maternal mortality rates. Recent UNICEF reports from 2023 place the global maternal mortality ratio at 197 per 100,000 live births, which is approximately 40% less than the reported ratio from 2000. Although many countries report mortality rates on par with the global average, there are an overwhelming number of rural and underserved communities within these countries that continue to experience disproportionate rates of maternal mortality.
+
+One such country is Bangladesh, which has an overall maternal mortality ratio of 196 per 100,000 live births that appears to match the global rates; however, deeper investigation reveals significant differences in mortality rate between women of different socioeconomic backgrounds. A study conducted by Aniqa Tasnim Hossain and their team from Bangladesh's International Centre for Diarrhoeal Disease Research noted the following findings:
+
+> "women living in rural areas and those of poorer socioeconomic status were more likely to die due to maternal causes of deaths. Most deaths occurred on the day of and one day after delivery. We identified haemorrhage and eclampsia as the major contributors to maternal deaths. We also found a large proportion of deaths occurring in-transit with substantial shuttling for care seeking before their deaths. [@hossain2023maternal]"
+    
+In their conclusions, @hossain2023maternal recommended investing in a structured referral system and emergency transportation to prioritize delivering timely interventions for haemorrhaging or eclampsia. This sentiment is echoed in a paper published in *The Lancet* that performed a global analysis of the determinants in marternal health and mortality [@souza2023global]. @souza2023global argues that focusing research on the biomedical causes of mortality is insufficient, and more attention should be directed towards goals such as "primary prevention, early identification, and adequate management of pregnancy, labour, and postpartum complications". 
+
+Both reports highlight a growing need for the ability to identify and prioritize high-risk mothers in order to accurately and punctually deliver care. A welcome innovation has been the development of wearable technology and internet-enabled devices. These devices have allowed patients and physicians to reliably monitor health conditions from their homes and enabled the collection of physiological data from otherwise underserved communities. In 2020, @ahmed2020data used these devices as well as available medical records to build maternal health dataset of rural Bangladesh, which was later uploaded to the UC Irvine Machine Learning Repository. This project seeks to predict maternal health risk levels using an SVC model and the Maternal Health Risk dataset. The ability to accurately predict high-risk pregnancies would allow timely and focused medical interventions for vulnerable individuals.
+
+# Methods
+
+## Data
+The data set used in this project is of health conditions of pregnant women from the rural areas of Bangladesh created by Marzia Ahmed at Daffodil International University. This dataset was sourced from the UC Irvine Machine Learning Repository and can be found [here](https://archive.ics.uci.edu/dataset/863/maternal+health+risk). Each observation in the dataset corresponds to a pregnant individual's health profile, comprising a risk intensity level (low, medium, or high risk) and associated clinical measurements including demographic information (age) and vital signs (systolic blood pressure, diastolic blood pressure, blood glucose concentration, body temperature, and resting heart rate). The data set was collected via an IoT-based risk monitoring system from hospitals, community clinics, and maternal health cares in rural Bangladesh.
+
+### Data dictionary
+| Column Name | Role    | Type        | Description |
+|-------------|---------|-------------|-------------|
+| Age         | Feature | Integer     | Age of the patient during pregnancy (in years) |
+| SystolicBP  | Feature | Integer     | Systolic (upper) blood pressure measured in mmHg |
+| DiastolicBP | Feature | Integer     | Diastolic (lower) blood pressure measured in mmHg |
+| BS          | Feature | Integer     | Blood sugar level measured in mmol/L |
+| BodyTemp    | Feature | Integer     | Body temperature of the patient measured in °F |
+| HeartRate   | Feature | Integer     | Patient's resting heart rate measured in bpm |
+| RiskLevel   | Target  | Categorical | Predicted pregnancy risk level based on clinical features |
+
+## Analysis
+SVC was used to build a classification model to predict risk levels for pregnant women in rural Bangladesh. With the exception of diastolic blood pressure, all variables from the original dataset were included for analysis. The features used were age, systolic blood pressure, blood glucose level (BS), body temperature, and heart rate. Data was partitioned into a 70:30 train-test split and the random_state was set to 123 for reproducibility. We performed hyperparameter tuning using randomized search with 10-fold cross-validation and recall score (weighted) as our evaluation metric to select the optimal values for C (regularization parameter), gamma (kernel coefficient). Recall score was selected to optimize the model for sensitivity in predicting high-risk cases. All explanatory variables were numerical and were standardized via StandardScalar prior to fitting. The Python programming language and the following Python packages were used to perform the analysis: requests [@reitz2023requests], numpy [@harris2020array], Pandas [@mckinney2010data], pandera [@niels_bantilan_2023_pandera], altair [@vanderplas2018altair], matplotlib [@hunter2007matplotlib], seaborn [@waskom2021seaborn], deepchecks [@deepchecks], scikit-learn [@pedregosa2011scikit], and scipy [@virtanen2020scipy].
+
+# Results
+
+## Split Data
+
+Ahmed's Maternal Health Risk dataset was read into a data frame and split 70:30 into a training dataset and testing dataset, respectively. The training dataset was used to build and train the model, and the test data was maintained separately for objective evaluation of the model's performance. A random seed was saved to ensure reproducibility of the data split.
+
+```{python}
+# download data as zip and extract
+url = "https://archive.ics.uci.edu/static/public/863/maternal+health+risk.zip"
+
+request = requests.get(url)
+with open("../data/raw/maternal+health+risk.zip", 'wb') as f:
+    f.write(request.content)
+
+with zipfile.ZipFile("../data/raw/maternal+health+risk.zip", 'r') as zip_ref:
+    zip_ref.extractall("../data/raw")
+```
+
+```{python}
+#| label: tbl-raw-data
+#| tbl-cap: "Raw Maternal Health Risk Data"
+health_data = pd.read_csv("../data/raw/Maternal Health Risk Data Set.csv", header=0)
+health_data
+```
+
+```{python}
+train_df, test_df = train_test_split(
+    health_data, test_size=0.3, random_state=123
+)
+X_train, y_train = train_df.drop(columns=['RiskLevel']), train_df["RiskLevel"]
+X_test, y_test = test_df.drop(columns=['RiskLevel']), test_df["RiskLevel"]
+
+train_df.to_csv("../data/processed/maternal_health_risk_train.csv")
+test_df.to_csv("../data/processed/maternal_health_risk_test.csv")
+```
+
+```{python}
+#| label: tbl-train-data
+#| tbl-cap: "Training Data Split"
+train_df
+```
+
+```{python}
+#| label: tbl-test-data
+#| tbl-cap: "Testing Data Split"
+test_df
+```
+
+```{python}
+#| label: tbl-risk-counts
+#| tbl-cap: "Risk Level Counts in Training Data"
+y_train.value_counts()
+```
+
+## EDA
+Preliminary exploratory data analysis (EDA) was performed to briefly examine each explanatory variable. Previous research have described hypertension as a complication risk; therefore, we dropped diastolic BP for the more commonly significant systolic.  Distributions of each explanatory variable were plotted using histograms and coloured according to risk levels @fig-eda-distributions (blue: high risk, green: medium risk, orange: low risk). The plotted distibutions were visually distinct across risk levels. Thus, we continued to fit our model with the remaining features.
+
+```{python}
+#| label: fig-eda-distributions
+#| fig-cap: "Comparison of the distributions of features contributing to the risk intensity level."
+#| fig-subcap: 
+#|   - "Age Distribution"
+#|   - "Systolic BP Distribution"
+#|   - "Blood Sugar Distribution"
+#|   - "Body Temp Distribution"
+#|   - "Heart Rate Distribution"
+#| layout-ncol: 2
+feature_cols = ["Age", "SystolicBP", "BS", "BodyTemp", "HeartRate"]
+
+for feature in feature_cols:
+    train_df.groupby("RiskLevel")[feature].plot.hist(bins=50, alpha=0.5, legend=True, density = True);
+    plt.xlabel(feature);
+    plt.show()
+```
+
+
+## Data Validation
+
+### Validation Ranges
+
+For `Age`, we chose a validation range of 10-65 years. The lower limit of 10 accounts for rare cases of very early pregnancy, though pregnancies below the age of 15 are generally medically concerning. The upper limit of 65 represents the maximum biologically feasible range for pregnancy, though pregnancies beyond menopause are extremely rare and would usually require medical intervention. In very rare cases, values outside this range may occur but we can consider them extreme outliers, not suitable for our prediction task.
+
+For `SystolicBP`, we chose a validation range of 60-200 mmHg. Systolic blood pressure below 60 mmHg indicates severe hypotension, whereas systolic blood pressure above 200 mmHg indicates severe hypertension, both of which are life-threatening emergencies requiring immediate medical intervention. Since our model aims to classify routine maternal health risk levels, values outside the validation range are outside the scope of our classification model and would be considered outliers.
+
+For `DiastolicBP`, we chose a validation range of 40-140 mmHg. Diastolic blood pressure below 40 mmHg indicates severe hypotension, whereas diastolic blood pressure above 140 mmHg indicates severe hypertension, both of which are life-threatening emergencies requiring immediate medical intervention. Since our model aims to classify routine maternal health risk levels, values outside the validation range are outside the scope of our classification model and would be considered outliers.
+
+For `BS`, we chose a validation range of 1-25 mmol/L. Blood sugar below 1 mmol/L indicates severe hypoglycemia, whereas blood sugar above 25 mmol/L indicates severe hyperglycemia. Both of these are life-threatening emergencies requiring immediate hospitalization and can therefore be considered unsuitable for our predictive model.
+
+For `BodyTemp`, we chose a validation range of 95.0-105.0°F. Body temperature below 95.0°F indicates severe hypothermia, whereas body temperature above 105.0°F indicates severe hyperthermia. Both of these are life-threatening emergencies requiring immediate hospitalization and can therefore be considered as unsuitable for our predictive model.
+
+For `HeartRate`, we chose a validation range of 50-150 bpm. A resting heart rate below 50 bpm or above 150 bpm suggests potential cardiovascular problems requiring immediate medical intervention. Neither of the extreme values is compatible with normal maternal health assessment, and such values can be considered outliers.
+
+The target variable `RiskLevel` is a categorical variable representing the maternal health risk classification based on clinical assessment. Each observation must contain exactly one of these three risk levels: `low risk`, `mid risk` and `high risk`.
+
+```{python}
+def validate_file_format(file_path, expected_file_extension):
+    """
+    Function to check if the file has the correct format,
+    given the file path and expected file extension.
+    """
+    if not file_path.endswith(expected_file_extension):
+        error_msg = "Invalid file format."
+        raise ValueError(error_msg)
+
+expected_file_extension = ".csv"
+file_path = "data/raw/Maternal Health Risk Data Set.csv"
+```
+
+```{python}
+def validate_column_names(data, expected_columns):
+    """
+    Function to check if the DataFrame has the correct column names,
+    given the DataFrame and the expected column names.
+    """
+    actual_columns = data.columns.tolist()
+    
+    missing_columns = set(expected_columns) - set(actual_columns)
+    if missing_columns:
+        error_msg = "Missing required columns."
+        raise ValueError(error_msg)
+
+    extra_columns = set(actual_columns) - set(expected_columns)
+    if extra_columns:
+        error_msg = "Unexpected extra columns found."
+        raise ValueError(error_msg)
+
+expected_columns = ["Age", "SystolicBP", "DiastolicBP", "BS", "BodyTemp", "HeartRate", "RiskLevel"]
+```
+
+```{python}
+# Code reference: https://github.com/skysheng7/DSCI522_data_validation_demo/blob/main/notebooks/00_python_data_validation_pandera.ipynb
+
+# Configure logging
+logging.basicConfig(
+    filename="validation_errors.log",
+    filemode="w",
+    format="%(asctime)s - %(message)s",
+    level=logging.INFO,
+)
+
+# Define the schema
+schema = pa.DataFrameSchema(
+    {
+        # check for correct category labels
+        "RiskLevel": pa.Column(str, pa.Check.isin(["low risk", "mid risk", "high risk"]), nullable=True),
+        # check for outliers and anomalous values
+        "Age": pa.Column(int, pa.Check.between(10, 65), nullable=True),
+        "SystolicBP": pa.Column(int, pa.Check.between(60, 200), nullable=True),
+        "DiastolicBP": pa.Column(int, pa.Check.between(40, 140), nullable=True),
+        "BS": pa.Column(float, pa.Check.between(1.0, 25.0), nullable=True),
+        "BodyTemp": pa.Column(float, pa.Check.between(95.0, 105.0), nullable=True),
+        "HeartRate": pa.Column(int, pa.Check.between(50, 150), nullable=True)
+    },
+    checks=[
+        # check for duplicate rows and empty rows
+        pa.Check(lambda df: ~df.duplicated().any(), error="Duplicate rows found."),
+        pa.Check(lambda df: ~(df.isna().all(axis=1)).any(), error="Empty rows found."),
+        # check for Missingness not beyond expected threshold
+        pa.Check(lambda df: (df.isna().mean() <= 0.05).all(), error="Some columns have more than 5% missing values."),
+        # check for label imbalance in target variable
+        pa.Check(
+            lambda df: (df["RiskLevel"].value_counts(normalize=True) >= 0.05).all(),
+            error="One or more RiskLevel categories have <5% of observations.",
+        ),
+
+        # make sure there is no column with constant values
+        pa.Check(
+            lambda df: df[["Age", "SystolicBP", "DiastolicBP", "BS",
+                          "BodyTemp", "HeartRate"]].nunique().min() > 1,
+            error="One or more features have no variation.",
+        ),
+    ],
+    drop_invalid_rows=False,
+)
+
+# Initialize error cases DataFrame
+error_cases = pd.DataFrame()
+data = health_data.copy()
+
+# Validate data and handle errors: correct file format, correct column names
+try:
+    validate_file_format(file_path, expected_file_extension)
+    validate_column_names(data, expected_columns)
+except ValueError as e:
+    # Convert the error message to a JSON string
+    error_message = json.dumps(str(e), indent=2)
+    logging.error("\n" + error_message)
+
+# Validate data and handle errors: no empty observations, missingness not beyond threshold,
+# correct data types for columns, no outliers, correct category levels
+try:
+    validated_data = schema.validate(data, lazy=True)
+except pa.errors.SchemaErrors as e:
+    error_cases = e.failure_cases
+
+    # Convert the error message to a JSON string
+    error_message = json.dumps(e.message, indent=2)
+    logging.error("\n" + error_message)
+
+# Filter out invalid rows based on the error cases: keep the duplicate rows (explanation below)
+if not error_cases.empty:
+    invalid_indices = error_cases["index"].dropna().unique()
+    validated_data = (
+        data.drop(index=invalid_indices)
+        .reset_index(drop=True)
+        .dropna(how="all")
+    )
+else:
+    validated_data = data
+```
+
+To ensure that the target variable is not severely imbalanced, we applied a minimum class frequency check (at least 5% per class). This avoids situations where certain risk levels are too rare for the model to learn meaningful patterns, which could lead to biased predictions.
+
+```{python}
+print("Data shape before validation:")
+print(data.shape)
+
+print("Data shape after validation:")
+print(validated_data.shape)
+```
+
+#### Validation Range Results
+
+We dropped 4 observations during our preliminary data validation, as these rows contain invalid data entires that would introduce noise into our model. More details about which observations have been dropped can be found under `validation_errors.log` in the `notebooks` folder. 
+
+The validation log shows that the dropped observations include:
+- 2 rows with `Age` outside the expected range (10-65 years): ages 66 and 70
+- 2 rows with `HeartRate` of 7 bpm, which seems an impossibility for living people
+
+#### Duplicate Observations
+
+We have retained the 562 duplicate rows found in our data validation checks. Since the [original data set](https://archive.ics.uci.edu/dataset/863/maternal+health+risk) lacks unique patient identifiers (no patient ID or timestamp), we cannot definitely determine whether these duplicates represent the same patient measured multiple times or different patients with identical measurements. Given this uncertainty and the substantial dataset reduction that would result from removing the duplicates, we opted to keep all duplicate rows and only remove observations that clearly fail other data validation checks. 
+
+The dataset passed all other validation checks, namely:
+- Correct data file format
+- Correct column names
+- No empty observations
+- Missingness not beyond expected threshold: all columns have <5% missing values (threshold = 0.05)
+- Correct data types in each column
+- Correct category levels: all categorical values match expected levels
+- No outliers: all numeric values fall within reasonable ranges (with the exception of the 4 dropped rows)
+- Target/response variable follows expected distribution
+
+Our final validated dataset `validated_data` contains 1,010 observations. 
+
+```{python}
+#| label: tbl-data-summary
+#| tbl-cap: "Descriptive Statistics of Health Data"
+health_data.describe()
+```
+
+```{python}
+health_data.info()
+```
+
+### Correlations
+
+```{python}
+# Code reference: https://ubc-dsci.github.io/reproducible-and-trustworthy-workflows-for-data-science/lectures/136-data_validation-python-deepchecks.html
+from deepchecks.tabular import Dataset
+
+mh_train_ds = Dataset(train_df, label="RiskLevel", cat_features=[])
+```
+
+#### Target-Feature Correlation
+
+```{python}
+from deepchecks.tabular.checks import FeatureLabelCorrelation
+
+
+check_feat_lab_corr = FeatureLabelCorrelation().add_condition_feature_pps_less_than(0.9)
+check_feat_lab_corr_result = check_feat_lab_corr.run(dataset=mh_train_ds)
+```
+
+```{python}
+# if deepchecks can not be use, use pandera for a similar but simplified test
+RISK_MAP = {"low risk": 0, "mid risk": 1, "high risk": 2}
+
+corr_schema = pa.DataFrameSchema(
+    {
+        "Age": pa.Column(int),
+        "SystolicBP": pa.Column(int),
+        "DiastolicBP": pa.Column(int),
+        "BS": pa.Column(float),
+        "BodyTemp": pa.Column(float),
+        "HeartRate": pa.Column(int),
+        "RiskLevel": pa.Column(str),
+    },
+    checks=[
+        # Feature–Label correlation check
+        Check(
+            lambda df: (
+                # convert RiskLevel to integers(0-2)
+                df.assign(
+                    RiskNum=df["RiskLevel"].map(RISK_MAP)
+                )
+                # Compute correlations with all numeric features, Find the highest absolute correlation
+                # Fail validation if any feature has absolute correlation larger or equal to 0.9
+                .corr(numeric_only=True)["RiskNum"]
+                .drop("RiskNum")
+                .abs()
+                .max()
+                < 0.9
+            ),
+            error="One or more features have correlation ≥ 0.9 with the target variable.",
+        )
+    ]
+)
+validated_df = corr_schema.validate(train_df, lazy=True)
+```
+
+#### Feature-Feature Correlation
+
+```{python}
+from deepchecks.tabular.checks.data_integrity import FeatureFeatureCorrelation
+
+feat_feat_check = (
+    FeatureFeatureCorrelation()
+    .add_condition_max_number_of_pairs_above_threshold(
+        0.9, 
+        0    
+    )
+)
+
+feat_feat_result = feat_feat_check.run(dataset=mh_train_ds)
+
+if not feat_feat_result.passed_conditions():
+    raise ValueError(
+        "Too many highly correlated feature pairs (possible redundancy or leakage)."
+    )
+
+```
+
+#### Correlation Validation Results
+
+To ensure that our predictive modeling process does not rely on spurious or overly strong relationships, we performed two correlation-based data validation checks on the training split only (to avoid test-set leakage):
+
+1. Target–Feature Correlation Check
+
+We applied the FeatureLabelCorrelation check from Deepchecks (used Pandera for a similar test if Deepchecks can't be used). This check evaluates whether any feature has an strong relationship with the target variable (RiskLevel), which could be a sign of target leakage.
+Threshold used: correlation < 0.9
+
+Result:
+All features met the threshold. No anomalous or suspiciously high correlations were detected between features and the target.
+
+2. Feature–Feature Correlation Check
+
+We also used Deepchecks' FeatureFeatureCorrelation` to check for unusually high correlations between pairs of features, which may indicate redundancy or multicolinearity in modeling.
+
+Result:
+Feature–feature correlations met the threshold. No pairs of features exhibited extremely high correlation that would require removal or special handling.
+
+### Overall Conclusion
+
+The validated dataset was confirmed to be within acceptable ranges and both correlation checks passed. There were no failing rows, and no features required modification or exclusion based on these validation steps. This suggests that the dataset has no correlation-based anomalies, and is appropriate for next step of model training.
+
+## Model construction
+
+We selected a Support Vector Classifier (SVC) model for this classification task. To identify the model configuration that best predicted maternal health risk levels, we performed hyperparameter tuning using randomized search with 10-fold cross-validation and recall score (weighted) as our evaluation metric to select the optimal values for C (regularization parameter), gamma (kernel coefficient). We found that the optimal hyperparameters were 760 for C and 5.8 for gamma.
+
+```{python}
+#| output: false
+#| echo: false
+preprocessor = make_column_transformer(
+    (StandardScaler(), feature_cols)
+)
+```
+
+```{python}
+#| output: false
+#| echo: false
+preprocessor.fit(X_train)
+```
+
+```{python}
+#| output: false
+#| echo: false
+X_train_enc = pd.DataFrame(
+    preprocessor.transform(X_train), 
+    index=X_train.index, 
+    columns=preprocessor.get_feature_names_out()
+)  
+
+X_train_enc
+```
+
+```{python}
+#| output: false
+#| echo: false
+dc = DummyClassifier()
+```
+
+```{python}
+#| output: false
+#| echo: false
+dc_score = pd.DataFrame(cross_validate(dc, X_train, y_train, cv=5, return_train_score=True))
+```
+
+```{python}
+#| label: tbl-dummy-score
+#| tbl-cap: "Dummy Classifier Cross-Validation Scores"
+dc_score
+```
+
+```{python}
+svc = make_pipeline(preprocessor, SVC())
+```
+
+```{python}
+svc_score = pd.DataFrame(cross_validate(svc, X_train, y_train, cv=5, return_train_score=True))
+```
+
+```{python}
+#| label: tbl-svc-score
+#| tbl-cap: "SVC Cross-Validation Scores (Default)"
+svc_score
+```
+
+### Hyperparameter tuning
+
+In order to classify clinical risk levels, recall score was selected as the preferred evaluation metric. This is because recall score measures the percentage correctly identified of actual high-risk pregnancies. This is critical for maternal health prediction where false negatives could result in missing high-risk, vulnerable individuals. Although prioritizing recall could increase the rate of false positive errors, it is the safer choice in this context.
+
+```{python}
+svc_score = pd.DataFrame(cross_validate(svc, X_train, y_train, cv=5, return_train_score=True, scoring="recall_weighted"))
+```
+
+```{python}
+#| label: tbl-svc-recall
+#| tbl-cap: "SVC Cross-Validation Scores (Recall Weighted)"
+svc_score
+```
+
+```{python}
+#| output: false
+#| echo: false
+param_grid = {
+    "svc__C": loguniform(1e-2, 1e3),
+    "svc__gamma": loguniform(1e-4, 1e1)
+}
+```
+
+```{python}
+#| output: false
+#| echo: false
+random_search = RandomizedSearchCV(svc,                                    
+                  param_distributions=param_grid, 
+                  n_iter=100, 
+                  n_jobs=-1,
+                  return_train_score=True,
+                  cv=10,
+                  scoring='recall_weighted',
+                  random_state=123)
+
+random_search.fit(X_train, y_train)
+```
+
+```{python}
+random_search.best_score_
+```
+
+```{python}
+#| output: false
+#| echo: false
+result_grid = pd.DataFrame(random_search.cv_results_)
+result_grid = result_grid[
+    [
+        "mean_test_score",
+        "param_svc__gamma",
+        "param_svc__C",
+        "mean_fit_time",
+        "rank_test_score",
+    ]
+].set_index("rank_test_score").sort_index().T.iloc[:, :10]
+
+result_grid
+```
+
+```{python}
+#| label: fig-hyperparam-heatmap
+#| fig-cap: "Results from hyperparameter optimization and 10-fold cross validation to choose gamma and C. Recall score was used as the classification metric as gamma and C was varied."
+plt.figure(figsize=(12, 5))
+sns.heatmap(result_grid, 
+            annot=True,           
+            fmt='.3f',           
+            cmap='viridis',        
+            cbar_kws={'label': 'Value'},
+            linewidths=0.5,
+            linecolor='gray')
+
+plt.title('Top 10 SVC Hyperparameter Combinations', fontsize=14, pad=20)
+plt.xlabel('Rank', fontsize=12)
+plt.ylabel('Parameter/Metric', fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+accuracy_score = random_search.score(
+    X_test, y_test
+)
+```
+
+```{python}
+#| output: false
+#| echo: false
+accuracy_score
+```
+
+```{python}
+maternal_preds = X_test.assign(
+    predicted=random_search.best_estimator_.predict(X_test)
+)
+
+# Add the actual labels
+maternal_preds['actual'] = y_test.values
+
+# Compute recall score (weighted for multi-class)
+recall = recall_score(
+    maternal_preds['actual'],
+    maternal_preds['predicted'],
+    average='weighted'
+)
+```
+
+```{python}
+#| output: false
+#| echo: false
+recall
+```
+
+```{python}
+#| label: tbl-crosstab
+#| tbl-cap: "Crosstab of Actual vs Predicted Risk Levels"
+pd.crosstab(
+    maternal_preds["actual"],
+    maternal_preds["predicted"],
+)
+```
+
+```{python}
+#| label: fig-confusion-matrix
+#| fig-cap: "Confusion matrix of model performance on test data."
+confmat_logreg_bal = ConfusionMatrixDisplay.from_predictions(
+    y_test,
+    random_search.best_estimator_.predict(X_test),
+    #normalize='all'
+)
+```
+
+```{python}
+#| label: fig-roc-curve
+#| fig-cap: "ROC curve of model performance on test data."
+y_score = random_search.best_estimator_.decision_function(X_test)
+svc_classes = random_search.best_estimator_.named_steps['svc'].classes_
+y_test_bin = label_binarize(y_test, classes=svc_classes)
+fig, ax = plt.subplots(figsize=(6, 8))
+ax.set_title('ROC Curve - Test Data', fontsize=14, fontweight='bold')
+
+for i, class_name in enumerate(svc_classes):
+    auc = roc_auc_score(y_test_bin[:, i], y_score[:, i])
+    RocCurveDisplay.from_predictions(
+        y_test_bin[:, i],
+        y_score[:, i],
+        name=f'{class_name} (AUC = {auc:.3f})',
+        ax=ax
+    )
+    print(f"{class_name}: AUC = {auc:.3f}")
+```
+
+### Summary of Model Results
+
+The final SVC classifier performed fairly well on an unseen test data set, with a weighted recall score of 0.77 and an overall accuracy of 0.77. Out of the 305 test data cases, it correctly predicted 235 cases. The model showed particularly strong performance in identifying high-risk pregnancies, achieving an AUC of 0.953 for the high-risk class, compared to 0.884 for low-risk class and 0.858 for medium-risk class. It correctly identifies 74 out of 87 actual high-risk pregnancies resulting in a 85% recall for high risk. There were 13 notable errors in which true high-risk cases were misclassified as 11 medium-risk and 2 low-risk.
+
+# Discussion
+
+The latest interation of the SVC model delivered promising results and demonstrated considerable accuracy when classifying high-risk individuals. Correct identification of high-risk individuals is pivotal in the prevention and early intervention of pregnancy complications, such as hemorrhaging and eclampsia. The model's ability to correctly classify high-risk inviduals is encouraging, and future interations could help alert doctors or emergency responders to improve accessibility for underserved communities.
+
+Further refinement is required, however, as the model made 13 notable classification errors during testing. 13 truely high-risk cases were misclassified as 11 medium-risk and 2 low-risk. In reality, these false negatives are gaps where high-risk individuals could be overlooked and not prioritized appropriately. Future versions should seek to improve the model's sensitivity to high-risk cases and better differentiate between medium and low-risk categories before it is ready to be implemented in clinical settings.
+
+A limitation of this model is that other devices and their sensors may have different measurement accuracies and calibration standards. The model was trained on data collected from specific IoT devices in rural Bangladesh; therefore, its performance may vary when applied to data from different devices or populations. Additionally, other countries may have health information documentation standards that differ from Bangladesh. Future work should consider validating the model across diverse datasets and device types to ensure its robustness and generalizability.
+
+# Conclusion
+
+Global maternal mortality rates are on the decline; however, there remains unmet needs within many developing and underserved communities. Greater emphasis on primary prevention and  early identification would enable better management of pregnancy complications and improve health outcomes overall. This report demonstrates the potential of machine learning models and at-home monitoring devices. With further improvement, these tools could create opportunities for more focused, effective, and resourceful delivery of care.
+
+# References
+
+
