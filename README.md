@@ -35,15 +35,28 @@ make up
 
 2. Browse to this url: http://localhost:8886/
 
-3. To run the data analysis, run the following from the root of this repository:
-Open `notebooks/health_analysis.ipynb` in Jupyter Lab you just launhed and under the "Kernel" menu click "Restart Kernel and Run All Cells..."
+3. To run the analysis, open a terminal and run the following commands:
+
+```
+python scripts/fit_maternal_health_risk_classifier.py \
+    --training-data=data/processed/maternal_health_risk_train.csv \
+    --pipeline-to=results/models \
+    --plot-to=results/figures \
+    --seed=522
+```
 
 ### Clean up
 
-1. To shut down the container and clean up the resources, enter the following command:
+1. To shut down the container and clean up the resources, enter the following command to stop the Docker compose services:
 
 ``` 
 make stop
+```
+
+2. Enter the following command to stop the Docker compose services:
+
+``` 
+make remove
 ```
 
 ## Developer notes
