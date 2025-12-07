@@ -47,19 +47,12 @@ python scripts/validate_data.py \
     --data-to=data/processed \
     --log-to=results/logs
 
-# With default parameters (test_size=0.3, random_state=123)
-python scripts/split_preprocess_data.py \
-    --validated-data=data/processed/validated_data.csv \
-    --data-to=data/processed \
-    --preprocessor-to=results/models
-
-# With custom parameters
 python scripts/split_preprocess_data.py \
     --validated-data=data/processed/validated_data.csv \
     --data-to=data/processed \
     --preprocessor-to=results/models \
-    --test-size=0.2 \
-    --random-state=522
+    --test-size=0.3 \
+    --random-state=123
 
 python scripts/eda.py \
     --processed-training-data=data/processed/maternal_health_risk_train.csv \
@@ -70,13 +63,16 @@ python scripts/fit_maternal_health_risk_classifier.py \
     --training-data=data/processed/maternal_health_risk_train.csv \
     --pipeline-to=results/models \
     --plot-to=results/figures \
-    --seed=522
+    --seed=123
     
 python scripts/evaluate_maternal_health_risk_classifier.py \
     --processed-test-data=data/processed/maternal_health_risk_test.csv \
     --pipeline-from=results/models/maternal_risk_classfier.pickle \
     --results-to=results/tables \
-    --seed=522
+    --seed=123
+
+quarto render report/health_analysis.qmd --to html
+quarto render report/health_analysis.qmd --to pdf
 ```
 
 ### Clean up
