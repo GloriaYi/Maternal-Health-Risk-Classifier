@@ -7,10 +7,12 @@ import os
 import click
 import altair as alt
 import pandas as pd
+import math
+import matplotlib.pyplot as plt
+import seaborn as sns
+import io
 from deepchecks.tabular import Dataset
 from deepchecks.tabular.checks import FeatureLabelCorrelation, FeatureFeatureCorrelation
-
-
 
 FEATURE_COLS = ["Age", "SystolicBP", "DiastolicBP", "BS", "BodyTemp", "HeartRate"]
 
@@ -28,7 +30,13 @@ FEATURE_COLS = ["Age", "SystolicBP", "DiastolicBP", "BS", "BodyTemp", "HeartRate
     required=True,
     help="Path to directory where the EDA plots will be written to.",
 )
-def main(processed_training_data, plot_to):
+@click.option(
+    "--tables-to",
+    type=str,
+    required=True,
+    help="Directory to save EDA summary tables (describe, info)."
+)
+def main(processed_training_data, plot_to, tables_to):
     """
     Create EDA plots for the maternal health training data:
 
@@ -38,33 +46,23 @@ def main(processed_training_data, plot_to):
 
     All plots are saved to the directory given by --plot-to.
     """
-
+    os.makedirs(plot_to, exist_ok=True)
+    os.makedirs(tables_to, exist_ok=True)
+    # read in data
     train_df = pd.read_csv(processed_training_data)
 
-    # Data validation - correlation checks
+    # Summary tables
+    # 1. Describe table
+    describe_df = train_df.describe(include="all").transpose()
+    describe_df.to_csv(os.path.join(tables_to, "train_describe.csv"))
 
-    mh_train_ds = Dataset(
-        data=train_df.drop(columns=["RiskLevel"]),
-        label="RiskLevel",
-        cat_features=[]
-    )
+    # 2. Info table
+    buf = io.StringIO()
+    train_df.info(buf=buf)
+    info_str = buf.getvalue()
 
-    # feature-label correlation check
-    check_feat_lab_corr = FeatureLabelCorrelation().add_condition_feature_pps_less_than(0.9)
-    feat_lab_result = check_feat_lab_corr.run(dataset=mh_train_ds)
-    feat_lab_result.save_as_html(
-        os.path.join(plot_to, "feature_label_correlation.html")
-    )
-
-    # feature-feature correlation check
-    check_feat_feat_corr = FeatureFeatureCorrelation().add_condition_max_number_of_pairs_above_threshold(
-        threshold=0.92,
-        n_pairs=0
-    )
-    feat_feat_result = check_feat_feat_corr.run(dataset=mh_train_ds)
-    feat_feat_result.save_as_html(
-        os.path.join(plot_to, "feature_feature_correlation.html")
-    )
+    with open(os.path.join(tables_to, "train_info.txt"), "w") as f:
+        f.write(info_str)
 
     
     corr_matrix = train_df[FEATURE_COLS].corr()
@@ -72,66 +70,69 @@ def main(processed_training_data, plot_to):
     corr_long.columns = ["Feature 1", "Feature 2", "Correlation"]
 
     # visualize correlation heatmap
-    corr_plot = (
-        alt.Chart(corr_long)
-        .mark_rect()
-        .encode(
-            x=alt.X("Feature 1:O", sort=FEATURE_COLS),
-            y=alt.Y("Feature 2:O", sort=FEATURE_COLS),
-            color=alt.Color("Correlation:Q", scale=alt.Scale(scheme="viridis")),
-            tooltip=[
-                "Feature 1",
-                "Feature 2",
-                alt.Tooltip("Correlation:Q", format=".2f"),
-            ],
-        )
-        .properties(
-            width=300,
-            height=300,
-            title="Correlation heatmap of maternal health features",
-        )
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+        corr_matrix, 
+        annot=True, 
+        fmt=".2f", 
+        cmap="viridis",
+        square=True,
+        cbar_kws={"label": "Correlation"}
     )
-
-    corr_plot.save(
-        os.path.join(plot_to, "correlation_heatmap.png"), scale_factor=2.0
-    )
-
-    mh_train_melted = train_df.melt(
-        id_vars=["RiskLevel"],
-        value_vars=FEATURE_COLS,
-        var_name="feature",
-        value_name="value",
-    )
-
-    mh_train_melted["feature"] = (
-        mh_train_melted["feature"]
-        .str.replace("BP", " BP")  
-    )
+    plt.title("Correlation heatmap of maternal health features")
+    plt.tight_layout()
+    plt.savefig(os.path.join(plot_to, "correlation_heatmap.png"), dpi=300)
+    plt.close()
+    
 
     # visualize feature distributions by risk level
-    dist_plot = (
-        alt.Chart(mh_train_melted, width=150, height=100)
-        .transform_density(
-            "value",
-            groupby=["RiskLevel", "feature"],
+    num_features = len(FEATURE_COLS)
+    cols = 3
+    rows = math.ceil(num_features / cols)
+    
+    fig, axes = plt.subplots(rows, cols, figsize=(12, 4 * rows), squeeze=False)
+    
+    for idx, feature in enumerate(FEATURE_COLS):
+        r, c = divmod(idx, cols)
+        ax = axes[r][c]
+    
+        sns.kdeplot(
+            data=train_df,
+            x=feature,
+            hue="RiskLevel",
+            fill=True,
+            alpha=0.4,
+            ax=ax
         )
-        .mark_area(opacity=0.7)
-        .encode(
-            x="value:Q",
-            y=alt.Y("density:Q", stack=False),
-            color="RiskLevel:N",
-        )
-        .facet(
-            "feature:N",
-            columns=3,
-        )
-        .resolve_scale(y="independent")
-        .properties(title="Feature distributions by maternal risk level")
+        ax.set_title(f"{feature} distribution by RiskLevel")
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(plot_to, "feature_densities_by_risklevel.png"), dpi=300)
+    plt.close()
+
+    # Data validation - correlation checks
+
+    mh_train_ds = Dataset(
+        train_df,
+        label="RiskLevel",
+        cat_features=[]
     )
 
-    dist_plot.save(
-        os.path.join(plot_to, "feature_densities_by_risklevel.png"), scale_factor=2.0
+    # feature-label correlation check
+    check_feat_lab_corr = FeatureLabelCorrelation().add_condition_feature_pps_less_than(0.9)
+    feat_lab_result = check_feat_lab_corr.run(dataset=mh_train_ds)
+
+    # feature-feature correlation check
+    check_feat_feat_corr = FeatureFeatureCorrelation().add_condition_max_number_of_pairs_above_threshold(
+        threshold=0.92,
+        n_pairs=0
     )
+    feat_feat_result = check_feat_feat_corr.run(dataset=mh_train_ds)
+    if not feat_lab_result.passed_conditions():
+        raise ValueError("Feature-Label correlation exceeds the maximum acceptable threshold.")
+    
+    if not feat_feat_result.passed_conditions():
+        raise ValueError("Feature-feature correlation exceeds the maximum acceptable threshold.")
 
 
 if __name__ == "__main__":
