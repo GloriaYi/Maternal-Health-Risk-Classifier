@@ -14,9 +14,6 @@ from scipy.stats import loguniform
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import RandomizedSearchCV
-##
-from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import StandardScaler
 
 @click.command()
 @click.option('--training-data', type=str, help="Path to training data")
@@ -60,11 +57,7 @@ def main(training_data, preprocessor, pipeline_to, plot_to, seed):
     """
     np.random.seed(seed)
     train_df = pd.read_csv(training_data)
-    #preprocessor = pickle.load(open(preprocessor_config, 'rb'))
-    feature_cols = ["Age", "SystolicBP", "BS", "BodyTemp", "HeartRate"]
-    preprocessor = make_column_transformer(
-        (StandardScaler(), feature_cols)
-    )
+    preprocessor = pickle.load(open(preprocessor, 'rb'))
     svc = make_pipeline(preprocessor, SVC())
     param_grid = {
     "svc__C": loguniform(1e-2, 1e3),
