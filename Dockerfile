@@ -7,7 +7,7 @@ COPY conda-lock.yml conda-lock.yml
 RUN conda install -n base -c conda-forge conda-lock -y
 RUN conda-lock install -n dockerlock conda-lock.yml
 RUN conda run -n dockerlock pip install deepchecks==0.19.1
-RUN quarto install tinytex
+RUN /opt/conda/envs/dockerlock/bin/quarto install tinytex
 #USER root
 
 # install lmodern to render Quarto PDF
