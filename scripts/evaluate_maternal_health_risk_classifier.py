@@ -40,6 +40,12 @@ from sklearn.metrics import ConfusionMatrixDisplay
     help="Path to file containing the fitted pipeline object (pickle).",
 )
 @click.option(
+    "--plot-to",
+    type=str,
+    required=True,
+    help="Path to directory where the result plots will be written to.",
+)
+@click.option(
     "--results-to",
     type=str,
     required=True,
@@ -52,7 +58,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
     show_default=True,
     help="Random seed.",
 )
-def main(processed_test_data, columns_to_drop, pipeline_from, results_to, seed):
+def main(processed_test_data, columns_to_drop, pipeline_from, plot_to, results_to, seed):
     """
     Evaluate the maternal health risk classification model on the processed
     test dataset and save evaluation metrics, confusion matrix, and ROC curves.
@@ -165,7 +171,7 @@ def main(processed_test_data, columns_to_drop, pipeline_from, results_to, seed):
     )
     ax.set_title("Confusion Matrix – Maternal Health Risk Classifier")
     fig.tight_layout()
-    fig.savefig(os.path.join(results_to, "confusion_matrix.png"), dpi=300)
+    fig.savefig(os.path.join(plot_to, "confusion_matrix.png"), dpi=300)
     plt.close(fig)
 
 
@@ -196,7 +202,7 @@ def main(processed_test_data, columns_to_drop, pipeline_from, results_to, seed):
 
     plt.title("One-vs-Rest ROC Curves for Maternal Health Risk Classification")
     plt.tight_layout()
-    plt.savefig(os.path.join(results_to, "roc_curves.png"))
+    plt.savefig(os.path.join(plot_to, "roc_curves.png"))
     plt.close()
 
     # save AUCs to CSV

@@ -56,11 +56,12 @@ python scripts/split_preprocess_data.py \
 
 python scripts/eda.py \
     --processed-training-data=data/processed/maternal_health_risk_train.csv \
-    --plot-to=results/eda/figures \
+    --plot-to=results/figures \
     --tables-to=results/tables
 
 python scripts/fit_maternal_health_risk_classifier.py \
     --training-data=data/processed/maternal_health_risk_train.csv \
+    --preprocessor=results/models/maternal_risk_preprocessor.pickle \
     --pipeline-to=results/models \
     --plot-to=results/figures \
     --seed=123
@@ -68,6 +69,7 @@ python scripts/fit_maternal_health_risk_classifier.py \
 python scripts/evaluate_maternal_health_risk_classifier.py \
     --processed-test-data=data/processed/maternal_health_risk_test.csv \
     --pipeline-from=results/models/maternal_risk_classfier.pickle \
+    --plot-to=results/figures \
     --results-to=results/tables \
     --seed=123
 
