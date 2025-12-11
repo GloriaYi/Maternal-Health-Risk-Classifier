@@ -54,7 +54,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 @click.option(
     "--seed",
     type=int,
-    default=522,
+    default=123,
     show_default=True,
     help="Random seed.",
 )
@@ -93,7 +93,7 @@ def main(processed_test_data, columns_to_drop, pipeline_from, plot_to, results_t
             - ``auc_scores.csv``: AUC values per class.
 
     seed : int, optional
-        Random seed used for reproducibility (default: 522).
+        Random seed used for reproducibility (default: 123).
 
     Returns
     -------
