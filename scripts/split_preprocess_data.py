@@ -61,7 +61,7 @@ def main(validated_data, data_to, preprocessor_to, test_size, random_state):
     data = pd.read_csv(validated_data)
 
     # split the data
-    train_df, test_df = train_test_split(data, test_size=test_size, random_state=random_state)
+    train_df, test_df = train_test_split(data, test_size=test_size, random_state=random_state, stratify=data['RiskLevel'])
 
     # save train and test data
     train_path = os.path.join(data_to, "maternal_health_risk_train.csv")
