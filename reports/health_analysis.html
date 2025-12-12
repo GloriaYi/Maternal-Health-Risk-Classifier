@@ -210,14 +210,14 @@ div.csl-indent {
 <section id="split-data" class="level2">
 <h2 class="anchored" data-anchor-id="split-data">Split Data</h2>
 <p>Ahmed’s Maternal Health Risk dataset was read into a data frame and split 70:30 into a training dataset and testing dataset, respectively. The training dataset was used to build and train the model, and the test data was maintained separately for objective evaluation of the model’s performance. A random seed was saved to ensure reproducibility of the data split.</p>
-<div class="cell" data-execution_count="3">
-<div id="tbl-raw-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="3">
+<div class="cell" data-execution_count="2">
+<div id="tbl-raw-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-raw-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;1: Raw Maternal Health Risk Data
 </figcaption>
 <div aria-describedby="tbl-raw-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="3">
+<div class="cell-output cell-output-display" data-execution_count="82">
 <div>
 
 
@@ -355,14 +355,14 @@ Table&nbsp;1: Raw Maternal Health Risk Data
 </figure>
 </div>
 </div>
-<div class="cell" data-execution_count="5">
-<div id="tbl-train-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="5">
+<div class="cell" data-execution_count="4">
+<div id="tbl-train-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="4">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-train-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;2: Training Data Split
 </figcaption>
 <div aria-describedby="tbl-train-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="5">
+<div class="cell-output cell-output-display" data-execution_count="84">
 <div>
 
 
@@ -500,14 +500,14 @@ Table&nbsp;2: Training Data Split
 </figure>
 </div>
 </div>
-<div class="cell" data-execution_count="6">
-<div id="tbl-test-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="6">
+<div class="cell" data-execution_count="5">
+<div id="tbl-test-data" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="5">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-test-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;3: Testing Data Split
 </figcaption>
 <div aria-describedby="tbl-test-data-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="6">
+<div class="cell-output cell-output-display" data-execution_count="85">
 <div>
 
 
@@ -645,14 +645,14 @@ Table&nbsp;3: Testing Data Split
 </figure>
 </div>
 </div>
-<div class="cell" data-execution_count="7">
-<div id="tbl-risk-counts" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="7">
+<div class="cell" data-execution_count="6">
+<div id="tbl-risk-counts" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="6">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-risk-counts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;4: Risk Level Counts in Training Data
 </figcaption>
 <div aria-describedby="tbl-risk-counts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="86">
 <pre><code>RiskLevel
 low risk     286
 mid risk     238
@@ -755,7 +755,7 @@ Figure&nbsp;1: Comparison of the distributions of features contributing to the r
 <p>For <code>HeartRate</code>, we chose a validation range of 50-150 bpm. A resting heart rate below 50 bpm or above 150 bpm suggests potential cardiovascular problems requiring immediate medical intervention. Neither of the extreme values is compatible with normal maternal health assessment, and such values can be considered outliers.</p>
 <p>The target variable <code>RiskLevel</code> is a categorical variable representing the maternal health risk classification based on clinical assessment. Each observation must contain exactly one of these three risk levels: <code>low risk</code>, <code>mid risk</code> and <code>high risk</code>.</p>
 <p>To ensure that the target variable is not severely imbalanced, we applied a minimum class frequency check (at least 5% per class). This avoids situations where certain risk levels are too rare for the model to learn meaningful patterns, which could lead to biased predictions.</p>
-<div id="d2a411c2" class="cell" data-execution_count="12">
+<div id="a8c2f5bb" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-stdout">
 <pre><code>Data shape before validation:
 (1014, 7)
@@ -773,14 +773,14 @@ Data shape after validation:
 <p>We have retained the 562 duplicate rows found in our data validation checks. Since the <a href="https://archive.ics.uci.edu/dataset/863/maternal+health+risk">original data set</a> lacks unique patient identifiers (no patient ID or timestamp), we cannot definitely determine whether these duplicates represent the same patient measured multiple times or different patients with identical measurements. Given this uncertainty and the substantial dataset reduction that would result from removing the duplicates, we opted to keep all duplicate rows and only remove observations that clearly fail other data validation checks.</p>
 <p>The dataset passed all other validation checks, namely: - Correct data file format - Correct column names - No empty observations - Missingness not beyond expected threshold: all columns have &lt;5% missing values (threshold = 0.05) - Correct data types in each column - Correct category levels: all categorical values match expected levels - No outliers: all numeric values fall within reasonable ranges (with the exception of the 4 dropped rows) - Target/response variable follows expected distribution</p>
 <p>Our final validated dataset <code>validated_data</code> contains 1,010 observations.</p>
-<div class="cell" data-execution_count="13">
-<div id="tbl-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="13">
+<div class="cell" data-execution_count="12">
+<div id="tbl-data-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="12">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;5: Descriptive Statistics of Health Data
 </figcaption>
 <div aria-describedby="tbl-data-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="13">
+<div class="cell-output cell-output-display" data-execution_count="92">
 <div>
 
 
@@ -878,7 +878,7 @@ Table&nbsp;5: Descriptive Statistics of Health Data
 </figure>
 </div>
 </div>
-<div id="1b30c1f7" class="cell" data-execution_count="14">
+<div id="1684d194" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-stdout">
 <pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
 RangeIndex: 1014 entries, 0 to 1013
@@ -929,14 +929,14 @@ memory usage: 55.6+ KB</code></pre>
 <section id="model-construction" class="level2">
 <h2 class="anchored" data-anchor-id="model-construction">Model construction</h2>
 <p>We selected a Support Vector Classifier (SVC) model for this classification task. To identify the model configuration that best predicted maternal health risk levels, we performed hyperparameter tuning using randomized search with 10-fold cross-validation and recall score (weighted) as our evaluation metric to select the optimal values for C (regularization parameter), gamma (kernel coefficient). We found that the optimal hyperparameters were 760 for C and 5.8 for gamma.</p>
-<div class="cell" data-execution_count="24">
-<div id="tbl-dummy-score" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="24">
+<div class="cell" data-execution_count="23">
+<div id="tbl-dummy-score" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="23">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dummy-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;6: Dummy Classifier Cross-Validation Scores
 </figcaption>
 <div aria-describedby="tbl-dummy-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell-output cell-output-display" data-execution_count="103">
 <div>
 
 
@@ -953,36 +953,36 @@ Table&nbsp;6: Dummy Classifier Cross-Validation Scores
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
-<td>0.000483</td>
-<td>0.000745</td>
+<td>0.000612</td>
+<td>0.000472</td>
 <td>0.401408</td>
 <td>0.403880</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
-<td>0.000366</td>
-<td>0.000282</td>
+<td>0.000397</td>
+<td>0.000315</td>
 <td>0.401408</td>
 <td>0.403880</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
-<td>0.000342</td>
-<td>0.000286</td>
+<td>0.000373</td>
+<td>0.000311</td>
 <td>0.401408</td>
 <td>0.403880</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
-<td>0.000344</td>
-<td>0.000263</td>
+<td>0.000363</td>
+<td>0.000307</td>
 <td>0.408451</td>
 <td>0.402116</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
-<td>0.000350</td>
-<td>0.000255</td>
+<td>0.000377</td>
+<td>0.000300</td>
 <td>0.404255</td>
 <td>0.403169</td>
 </tr>
@@ -995,14 +995,14 @@ Table&nbsp;6: Dummy Classifier Cross-Validation Scores
 </figure>
 </div>
 </div>
-<div class="cell" data-execution_count="27">
-<div id="tbl-svc-score" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="27">
+<div class="cell" data-execution_count="26">
+<div id="tbl-svc-score" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="26">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-svc-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;7: SVC Cross-Validation Scores (Default)
 </figcaption>
 <div aria-describedby="tbl-svc-score-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="cell-output cell-output-display" data-execution_count="106">
 <div>
 
 
@@ -1019,36 +1019,36 @@ Table&nbsp;7: SVC Cross-Validation Scores (Default)
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
-<td>0.011944</td>
-<td>0.004028</td>
+<td>0.008129</td>
+<td>0.002892</td>
 <td>0.725352</td>
 <td>0.707231</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
-<td>0.007503</td>
-<td>0.002931</td>
+<td>0.007454</td>
+<td>0.002796</td>
 <td>0.676056</td>
 <td>0.719577</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
-<td>0.007589</td>
-<td>0.002840</td>
+<td>0.007514</td>
+<td>0.002768</td>
 <td>0.718310</td>
 <td>0.719577</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
-<td>0.007249</td>
-<td>0.002728</td>
+<td>0.007195</td>
+<td>0.002686</td>
 <td>0.711268</td>
 <td>0.708995</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
-<td>0.007000</td>
-<td>0.002681</td>
+<td>0.006986</td>
+<td>0.002643</td>
 <td>0.659574</td>
 <td>0.727113</td>
 </tr>
@@ -1064,14 +1064,14 @@ Table&nbsp;7: SVC Cross-Validation Scores (Default)
 <section id="hyperparameter-tuning" class="level3">
 <h3 class="anchored" data-anchor-id="hyperparameter-tuning">Hyperparameter tuning</h3>
 <p>In order to classify clinical risk levels, recall score was selected as the preferred evaluation metric. This is because recall score measures the percentage correctly identified of actual high-risk pregnancies. This is critical for maternal health prediction where false negatives could result in missing high-risk, vulnerable individuals. Although prioritizing recall could increase the rate of false positive errors, it is the safer choice in this context.</p>
-<div class="cell" data-execution_count="29">
-<div id="tbl-svc-recall" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="29">
+<div class="cell" data-execution_count="28">
+<div id="tbl-svc-recall" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="28">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-svc-recall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;8: SVC Cross-Validation Scores (Recall Weighted)
 </figcaption>
 <div aria-describedby="tbl-svc-recall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="29">
+<div class="cell-output cell-output-display" data-execution_count="108">
 <div>
 
 
@@ -1088,36 +1088,36 @@ Table&nbsp;8: SVC Cross-Validation Scores (Recall Weighted)
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
-<td>0.007424</td>
-<td>0.003930</td>
+<td>0.007955</td>
+<td>0.003793</td>
 <td>0.725352</td>
 <td>0.707231</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
-<td>0.007210</td>
-<td>0.003595</td>
+<td>0.007355</td>
+<td>0.003578</td>
 <td>0.676056</td>
 <td>0.719577</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
-<td>0.007386</td>
-<td>0.003551</td>
+<td>0.007492</td>
+<td>0.003525</td>
 <td>0.718310</td>
 <td>0.719577</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
-<td>0.007106</td>
-<td>0.003439</td>
+<td>0.007214</td>
+<td>0.003459</td>
 <td>0.711268</td>
 <td>0.708995</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
-<td>0.006930</td>
-<td>0.003469</td>
+<td>0.007001</td>
+<td>0.003828</td>
 <td>0.659574</td>
 <td>0.727113</td>
 </tr>
@@ -1130,12 +1130,12 @@ Table&nbsp;8: SVC Cross-Validation Scores (Recall Weighted)
 </figure>
 </div>
 </div>
-<div id="99dfab73" class="cell" data-execution_count="32">
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div id="143cca09" class="cell" data-execution_count="31">
+<div class="cell-output cell-output-display" data-execution_count="111">
 <pre><code>0.7615895372233401</code></pre>
 </div>
 </div>
-<div id="cell-fig-hyperparam-heatmap" class="cell" data-execution_count="34">
+<div id="cell-fig-hyperparam-heatmap" class="cell" data-execution_count="33">
 <div class="cell-output cell-output-display">
 <div id="fig-hyperparam-heatmap" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1149,14 +1149,14 @@ Figure&nbsp;2: Results from hyperparameter optimization and 10-fold cross valida
 </div>
 </div>
 </div>
-<div class="cell" data-execution_count="39">
-<div id="tbl-crosstab" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="39">
+<div class="cell" data-execution_count="38">
+<div id="tbl-crosstab" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="38">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-crosstab-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Table&nbsp;9: Crosstab of Actual vs Predicted Risk Levels
 </figcaption>
 <div aria-describedby="tbl-crosstab-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output cell-output-display" data-execution_count="39">
+<div class="cell-output cell-output-display" data-execution_count="118">
 <div>
 
 
@@ -1203,7 +1203,7 @@ Table&nbsp;9: Crosstab of Actual vs Predicted Risk Levels
 </figure>
 </div>
 </div>
-<div id="cell-fig-confusion-matrix" class="cell" data-execution_count="40">
+<div id="cell-fig-confusion-matrix" class="cell" data-execution_count="39">
 <div class="cell-output cell-output-display">
 <div id="fig-confusion-matrix" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -1217,7 +1217,7 @@ Figure&nbsp;3: Confusion matrix of model performance on test data.
 </div>
 </div>
 </div>
-<div id="cell-fig-roc-curve" class="cell" data-execution_count="41">
+<div id="cell-fig-roc-curve" class="cell" data-execution_count="40">
 <div class="cell-output cell-output-stdout">
 <pre><code>high risk: AUC = 0.953
 low risk: AUC = 0.884
