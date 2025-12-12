@@ -80,7 +80,7 @@ def main(training_data, preprocessor, pipeline_to, plot_to, seed):
         train_df["RiskLevel"]
         )
 
-    with open(os.path.join(pipeline_to, "maternal_risk_classfier.pickle"), 'wb') as f:
+    with open(os.path.join(pipeline_to, "maternal_risk_classifier.pickle"), 'wb') as f:
         pickle.dump(random_search, f)
 
     result_grid = pd.DataFrame(random_search.cv_results_)

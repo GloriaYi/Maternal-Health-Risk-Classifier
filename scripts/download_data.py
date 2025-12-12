@@ -33,7 +33,7 @@ def main(url, write_to):
 
     # create directory if it does not already exist
     os.makedirs(write_to, exist_ok=True)
-
+    
     # extract filename from URL
     file_name = url.split('/')[-1]
     zip_path = os.path.join(write_to, file_name)
