@@ -28,21 +28,21 @@ remove: ## remove docker-compose services
 all: reports/health_analysis.html reports/health_analysis.pdf
 
 # download and extract data
-data/raw/maternal+health+risk.zip data/raw/Maternal\ Health\ Risk\ Data\ Set.csv: scripts/download_data.py
-	python scripts/download_data.py \
+data/raw/maternal+health+risk.zip data/raw/Maternal\ Health\ Risk\ Data\ Set.csv: scripts/01_download_data.py
+	python scripts/01_download_data.py \
 		--url="https://archive.ics.uci.edu/static/public/863/maternal+health+risk.zip" \
 		--write-to=data/raw
 
 # validate data and log results
-data/processed/validated_data.csv results/logs/validation_errors.log: data/raw/Maternal\ Health\ Risk\ Data\ Set.csv scripts/validate_data.py
-	python scripts/validate_data.py \
+data/processed/validated_data.csv results/logs/validation_errors.log: data/raw/Maternal\ Health\ Risk\ Data\ Set.csv scripts/02_validate_data.py
+	python scripts/02_validate_data.py \
 		--raw-data=data/raw/Maternal\ Health\ Risk\ Data\ Set.csv \
 		--data-to=data/processed \
 		--log-to=results/logs
 
 # split and preprocess data
-data/processed/maternal_health_risk_train.csv data/processed/maternal_health_risk_test.csv results/models/maternal_risk_preprocessor.pickle: data/processed/validated_data.csv scripts/split_preprocess_data.py
-	python scripts/split_preprocess_data.py \
+data/processed/maternal_health_risk_train.csv data/processed/maternal_health_risk_test.csv results/models/maternal_risk_preprocessor.pickle: data/processed/validated_data.csv scripts/03_split_preprocess_data.py
+	python scripts/03_split_preprocess_data.py \
 		--validated-data=data/processed/validated_data.csv \
 		--data-to=data/processed \
 		--preprocessor-to=results/models \
@@ -50,15 +50,15 @@ data/processed/maternal_health_risk_train.csv data/processed/maternal_health_ris
 		--random-state=123
 
 # perform eda and save plots
-results/figures/correlation_heatmap.png results/tables/feature_densities_by_risklevel.png: data/processed/maternal_health_risk_train.csv scripts/eda.py
-	python scripts/eda.py \
+results/figures/correlation_heatmap.png results/tables/feature_densities_by_risklevel.png: data/processed/maternal_health_risk_train.csv scripts/04_eda.py
+	python scripts/04_eda.py \
 		--processed-training-data=data/processed/maternal_health_risk_train.csv \
 		--plot-to=results/figures \
 		--tables-to=results/tables
 
 # train model, create visualized tuning and save model and results
-results/models/maternal_risk_classifier.pickle results/figures/svc_hyperparameter_tuning.png: data/processed/maternal_health_risk_train.csv results/models/maternal_risk_preprocessor.pickle scripts/fit_maternal_health_risk_classifier.py
-	python scripts/fit_maternal_health_risk_classifier.py \
+results/models/maternal_risk_classifier.pickle results/figures/svc_hyperparameter_tuning.png: data/processed/maternal_health_risk_train.csv results/models/maternal_risk_preprocessor.pickle scripts/05_fit_maternal_health_risk_classifier.py
+	python scripts/05_fit_maternal_health_risk_classifier.py \
 		--training-data=data/processed/maternal_health_risk_train.csv \
 		--preprocessor=results/models/maternal_risk_preprocessor.pickle \
 		--pipeline-to=results/models \
@@ -66,8 +66,8 @@ results/models/maternal_risk_classifier.pickle results/figures/svc_hyperparamete
 		--seed=123
 
 # evaluate model
-results/tables/test_scores.csv results/tables/confusion_matrix.csv results/tables/auc_scores.csv results/figures/confusion_matrix.png results/figures/roc_curves.png: data/processed/maternal_health_risk_test.csv results/models/maternal_risk_classifier.pickle scripts/evaluate_maternal_health_risk_classifier.py
-	python scripts/evaluate_maternal_health_risk_classifier.py \
+results/tables/test_scores.csv results/tables/confusion_matrix.csv results/tables/auc_scores.csv results/figures/confusion_matrix.png results/figures/roc_curves.png: data/processed/maternal_health_risk_test.csv results/models/maternal_risk_classifier.pickle scripts/06_evaluate_maternal_health_risk_classifier.py
+	python scripts/06_evaluate_maternal_health_risk_classifier.py \
 		--processed-test-data=data/processed/maternal_health_risk_test.csv \
 		--pipeline-from=results/models/maternal_risk_classifier.pickle \
 		--plot-to=results/figures \

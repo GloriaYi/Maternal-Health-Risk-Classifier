@@ -38,14 +38,21 @@ def main(url, write_to):
     file_name = url.split('/')[-1]
     zip_path = os.path.join(write_to, file_name)
 
-    # download the zip file
-    request = requests.get(url)
-    with open(zip_path, 'wb') as f:
-        f.write(request.content)
+    try:
+        # existing download + save zip code
+        request = requests.get(url)
+        # download the zip file
+        with open(zip_path, 'wb') as f:
+            f.write(request.content)
 
-    # extract the zip file
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(write_to)
+        # extract the zip file
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(write_to)
 
+        click.echo("Download successful. Using downloaded raw data.")
+
+    except Exception:
+        click.echo("Download failed. Falling back to existing local raw data.")
+        
 if __name__ == '__main__':
     main()

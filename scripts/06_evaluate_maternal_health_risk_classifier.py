@@ -7,6 +7,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os
+import sys
 import click
 import numpy as np
 import pandas as pd
@@ -17,7 +18,11 @@ from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_auc_score, RocCurveDisplay
 import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, ROOT)
 
+from src.calc_metrics import compute_classification_metrics
+from src.roc_auc import compute_multiclass_auc
 
 
 @click.command()
@@ -118,38 +123,22 @@ def main(processed_test_data, columns_to_drop, pipeline_from, plot_to, results_t
     X_test = test_df.drop(columns=["RiskLevel"])
     y_test = test_df["RiskLevel"]
 
-    # accuracy
-    accuracy = mh_fit.score(X_test, y_test)
-
     y_pred = mh_fit.predict(X_test)
-    
-    # calculate recall
-    recall_weighted = recall_score(
-    y_test,
-    y_pred,
-    average="weighted"
-    )
 
-    # compute F2 weighted
-    f2_weighted = fbeta_score(
-        y_test,
-        y_pred,
+    # compute metrics(accuracy, weighted recall, weighted F2)
+    metrics = compute_classification_metrics(
+        y_true=y_test,
+        y_pred=y_pred,
         beta=2,
-        average="weighted",
+        average="weighted"
     )
 
-    test_scores = pd.DataFrame(
-        {
-            "accuracy": [accuracy],
-            "recall_weighted": [recall_weighted],
-            "F2_weighted": [f2_weighted],
-        }
-    )
-    test_scores.to_csv(
+    # Save metrics to CSV
+    pd.DataFrame([metrics]).to_csv(
         os.path.join(results_to, "test_scores.csv"),
         index=False,
     )
-
+    
     # confusion matrix
     confusion_matrix = pd.crosstab(
         y_test,
@@ -178,37 +167,39 @@ def main(processed_test_data, columns_to_drop, pipeline_from, plot_to, results_t
     # model must have decision_function or predict_proba
     try:
         y_score = mh_fit.decision_function(X_test)
-    except AttributeError:
+    except Exception:
         y_score = mh_fit.predict_proba(X_test)
 
     classes = mh_fit.classes_
-    y_test_bin = label_binarize(y_test, classes=classes)
 
-    # create figure
+    auc_dict = compute_multiclass_auc(
+        y_true=y_test,
+        y_score=y_score,
+        classes=classes
+    )
+
+    # Save AUC table
+    pd.DataFrame([auc_dict]).to_csv(
+        os.path.join(results_to, "auc_scores.csv"),
+        index=False
+    )
+
+    # Plot ROC curves
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    auc_results = {}
-
-    for i, class_name in enumerate(classes):
-        auc = roc_auc_score(y_test_bin[:, i], y_score[:, i])
-        auc_results[class_name] = auc
-        
+    for i, cls in enumerate(classes):
+        from sklearn.metrics import RocCurveDisplay
         RocCurveDisplay.from_predictions(
-            y_test_bin[:, i],
-            y_score[:, i],
-            name=f"{class_name} (AUC={auc:.3f})",
+            y_true=(y_test == cls).astype(int),
+            y_pred=y_score[:, i],
+            name=f"{cls} (AUC={auc_dict[cls]:.3f})",
             ax=ax
         )
 
-    plt.title("One-vs-Rest ROC Curves for Maternal Health Risk Classification")
+    plt.title("One-vs-Rest ROC Curves – Maternal Health Risk Classifier")
     plt.tight_layout()
     plt.savefig(os.path.join(plot_to, "roc_curves.png"))
     plt.close()
-
-    # save AUCs to CSV
-    auc_df = pd.DataFrame(auc_results, index=["AUC"])
-    auc_df.to_csv(os.path.join(results_to, "auc_scores.csv"))
-
 
 if __name__ == "__main__":
     main()
