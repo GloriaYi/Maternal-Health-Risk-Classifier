@@ -7,6 +7,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os
+import sys
 import click
 import altair as alt
 import pandas as pd
@@ -16,6 +17,14 @@ import seaborn as sns
 import io
 from deepchecks.tabular import Dataset
 from deepchecks.tabular.checks import FeatureLabelCorrelation, FeatureFeatureCorrelation
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, ROOT)
+from src.plot_corr_heatmap import (
+    compute_feature_correlations,
+    plot_correlation_heatmap
+)
+
 
 FEATURE_COLS = ["Age", "SystolicBP", "DiastolicBP", "BS", "BodyTemp", "HeartRate"]
 
@@ -86,6 +95,7 @@ def main(processed_training_data, plot_to, tables_to):
         number of correlated feature pairs as defined in 
         ``FeatureFeatureCorrelation`` checks.
     """
+    # make sure the path exists, if not, create it
     os.makedirs(plot_to, exist_ok=True)
     os.makedirs(tables_to, exist_ok=True)
     # read in data
@@ -104,26 +114,11 @@ def main(processed_training_data, plot_to, tables_to):
     with open(os.path.join(tables_to, "train_info.txt"), "w") as f:
         f.write(info_str)
 
-    
-    corr_matrix = train_df[FEATURE_COLS].corr()
-    corr_long = corr_matrix.reset_index().melt(id_vars="index")
-    corr_long.columns = ["Feature 1", "Feature 2", "Correlation"]
+    # plot correlation heatmap with function
+    corr_matrix = compute_feature_correlations(train_df, FEATURE_COLS)
+    heatmap_path = os.path.join(plot_to, "correlation_heatmap.png")
+    plot_correlation_heatmap(corr_matrix, heatmap_path)
 
-    # visualize correlation heatmap
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(
-        corr_matrix, 
-        annot=True, 
-        fmt=".2f", 
-        cmap="viridis",
-        square=True,
-        cbar_kws={"label": "Correlation"}
-    )
-    plt.title("Correlation heatmap of maternal health features")
-    plt.tight_layout()
-    plt.savefig(os.path.join(plot_to, "correlation_heatmap.png"), dpi=300)
-    plt.close()
-    
 
     # visualize feature distributions by risk level
     num_features = len(FEATURE_COLS)
