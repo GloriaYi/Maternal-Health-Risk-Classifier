@@ -1,5 +1,5 @@
 project:
   type: default
-  output-dir: docs
+  output-dir: reports
   render:
-    - notebooks/health_analysis.qmd
+    - reports/health_analysis.qmd
